@@ -1,22 +1,28 @@
 {
-  "name": "nodejsapi",
+  "name": "repo-nodejsapi",
   "version": "1.0.0",
   "description": "A REST API using NodeJS and MySQL",
   "main": "server.js",
+  "directories": {
+    "lib": "lib"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/akaushik759/NodejsAPI.git"
   },
   "keywords": [
     "nodejs",
     "mysql",
-    "express",
     "rest"
   ],
   "author": "Abhishek Kaushik",
   "license": "ISC",
-  "dependencies": {
-    "body-parser": "^1.19.0",
-    "express": "^4.17.1",
-    "mysql": "^2.18.1"
-  }
+  "bugs": {
+    "url": "https://github.com/akaushik759/NodejsAPI/issues"
+  },
+  "homepage": "https://github.com/akaushik759/NodejsAPI#readme"
 }
