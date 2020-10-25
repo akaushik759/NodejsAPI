@@ -24,5 +24,8 @@
   "bugs": {
     "url": "https://github.com/akaushik759/NodejsAPI/issues"
   },
-  "homepage": "https://github.com/akaushik759/NodejsAPI#readme"
+  "homepage": "https://github.com/akaushik759/NodejsAPI#readme",
+  "dependencies": {
+    "uuid": "^8.3.1"
+  }
 }

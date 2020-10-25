@@ -9,11 +9,15 @@ const cors = require('cors');
 const PORT = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
+
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+
 app.use(cors());
 
 // add routes
-const router = require('./routes/route.js');
-app.use('/api', router);
+const route = require('./routes/route.js');
+app.use('/api', route);
 
 // run server
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
