@@ -4,41 +4,19 @@ var session = require('express-session');
 
 var ssn;
 
-const isRoot = (req, res, next) => {
+const allowedRoles = (roles) => {
+  return function(req, res, next) {
     ssn = req.session;
-    if (ssn.role == 'root'){
+    if(roles.includes(ssn.role)){
       next();
     }
-
-    return res.status(401).send({
+    else{
+      res.status(401).send({
         msg: 'Unauthorized access'
       });
-  };
-
-const isDelExec = (req, res, next) => {
-    ssn = req.session;
-    if (ssn.role == 'del_executive'){
-      next();
     }
-
-    return res.status(401).send({
-        msg: 'Unauthorized access'
-      });
-  };
-
-const isUser = (req, res, next) => {
-    ssn = req.session;
-    if (ssn.role == 'user'){
-      next();
-    }
-
-    return res.status(401).send({
-        msg: 'Unauthorized access'
-      });
-  };
+}};
 
 module.exports = {
-  isRoot: isRoot,
-  isDelExec: isDelExec,
-  isUser: isUser 
+  allowedRoles: allowedRoles 
 };

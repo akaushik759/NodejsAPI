@@ -1,0 +1,38 @@
+CREATE TABLE `users` (
+	`id` VARCHAR(100) NOT NULL,
+	`name` TEXT,
+	`email` VARCHAR(100),
+	`password` TEXT,
+	`role` VARCHAR(20),
+	`address` TEXT,
+	`timestamp` DATE,
+	PRIMARY KEY (`id`)
+) ;
+
+CREATE TABLE `orders` (
+	`id` VARCHAR(100) NOT NULL,
+	`cookie_id` VARCHAR(100) NOT NULL,
+	`cust_id` VARCHAR(100) NOT NULL,
+	`address` TEXT,
+	`status` VARCHAR(20),
+	`dexecutive` TEXT,
+	`timestamp` DATE,
+	PRIMARY KEY (`id`)
+) ;
+
+CREATE TABLE `dexecutive` (
+	`id` VARCHAR(100) NOT NULL,
+	`name` TEXT,
+	`mobile` VARCHAR(30),
+	`cur_order_id` VARCHAR(100),
+	`address` TEXT,
+	`location` TEXT,
+	PRIMARY KEY (`id`)
+) ;
+
+CREATE TABLE `cookies` (
+	`id` VARCHAR(100) NOT NULL,
+	`name` TEXT,
+	`price` VARCHAR(30),
+	PRIMARY KEY (`id`)
+) ;

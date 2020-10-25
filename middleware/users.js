@@ -1,5 +1,8 @@
 // middleware/users.js
 const jwt = require('jsonwebtoken');
+var session = require('express-session');
+
+var ssn;
 
 const validateRegister = (req, res, next) => {
     // username min length 3
@@ -20,6 +23,7 @@ const validateRegister = (req, res, next) => {
   };
 
 const isLoggedIn = (req, res, next) => {
+  ssn = req.session;
   try {
     const token = req.headers.authorization; 
     const decoded = jwt.verify(
@@ -27,7 +31,15 @@ const isLoggedIn = (req, res, next) => {
       'SECRETKEY'
     );
     req.userData = decoded;
-    next();
+    if(ssn.isLoggedIn)
+    {
+      next();
+    }
+    else{
+      return res.status(401).send({
+        msg: 'You are not logged in'
+      });
+    }
   } catch (err) {
     console.log(err);
     return res.status(401).send({
