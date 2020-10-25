@@ -1,6 +1,7 @@
 // routes/router.js
 
 const express = require('express');
+var session = require('express-session');
 const route = express.Router();
 
 const bcrypt = require('bcryptjs');
@@ -9,8 +10,9 @@ const uuid = require('uuid');
 
 const db = require('../lib/db.js');
 const userMiddleware = require('../middleware/users.js');
+const roleMiddleware = require('../middleware/roles.js');
 
-// routes/router.js
+var ssn;
 
 route.post('/sign-up', userMiddleware.validateRegister, (req, res, next) => {
   db.query(
@@ -64,6 +66,7 @@ route.post('/sign-up', userMiddleware.validateRegister, (req, res, next) => {
 // routes/router.js
 
 route.post('/login', (req, res, next) => {
+	ssn = req.session;
   db.query(
     `SELECT * FROM users WHERE email = ${db.escape(req.body.email)};`,
     (err, result) => {
@@ -103,6 +106,10 @@ route.post('/login', (req, res, next) => {
                 expiresIn: '7d'
               }
             );
+            //Store frequently used data in session variables
+            ssn.name = result[0].name;
+            ssn.email = result[0].email;
+            ssn.role = result[0].role;
 
             delete result[0].password;
 
@@ -121,9 +128,24 @@ route.post('/login', (req, res, next) => {
   );
 });
 
+route.post('/logout', (req, res, next) => {
+	ssn = req.session;
+	ssn.destroy(function(error){ 
+        console.log("Session Destroyed")
+        return res.status(200).send({
+            msg: 'Successfully logged out'
+          });
+    }) 
+    return res.status(401).send({
+            msg: 'Error logging out'
+          });
+});
+
 
 route.get('/secret-route', userMiddleware.isLoggedIn, (req, res, next) => {
+	ssn = req.session;
   console.log(req.userData);
+  console.log(ssn.name+" "+ssn.email+" "+ssn.role);
   res.send('This is the secret content. Only logged in users can see that!');
 });
 

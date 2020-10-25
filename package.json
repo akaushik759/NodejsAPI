@@ -26,6 +26,7 @@
   },
   "homepage": "https://github.com/akaushik759/NodejsAPI#readme",
   "dependencies": {
+    "express-session": "^1.17.1",
     "uuid": "^8.3.1"
   }
 }
