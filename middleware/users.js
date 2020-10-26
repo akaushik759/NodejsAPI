@@ -48,7 +48,28 @@ const isLoggedIn = (req, res, next) => {
   }
 }
 
+const isLoggedOut = (req, res, next) => {
+  ssn = req.session;
+  try {
+    if(!ssn.isLoggedIn)
+    {
+      next();
+    }
+    else{
+      return res.status(401).send({
+        msg: 'You are logged in'
+      });
+    }
+  } catch (err) {
+    console.log(err);
+    return res.status(401).send({
+      msg: err
+    });
+  }
+}
+
 module.exports = {
   validateRegister: validateRegister,
-  isLoggedIn: isLoggedIn 
+  isLoggedIn: isLoggedIn,
+  isLoggedOut: isLoggedOut 
 };

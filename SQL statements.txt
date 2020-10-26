@@ -5,7 +5,7 @@ CREATE TABLE `users` (
 	`password` TEXT,
 	`role` VARCHAR(20),
 	`address` TEXT,
-	`timestamp` DATE,
+	`timestamp` DATETIME,
 	PRIMARY KEY (`id`)
 ) ;
 
@@ -16,17 +16,17 @@ CREATE TABLE `orders` (
 	`address` TEXT,
 	`status` VARCHAR(20),
 	`dexecutive` TEXT,
-	`timestamp` DATE,
+	`timestamp` DATETIME,
 	PRIMARY KEY (`id`)
 ) ;
 
-CREATE TABLE `dexecutive` (
+CREATE TABLE `del_executive` (
 	`id` VARCHAR(100) NOT NULL,
 	`name` TEXT,
-	`mobile` VARCHAR(30),
 	`cur_order_id` VARCHAR(100),
-	`address` TEXT,
+	`final_address` TEXT,
 	`location` TEXT,
+	`next_orders` TEXT,
 	PRIMARY KEY (`id`)
 ) ;
 
