@@ -6,15 +6,15 @@ Link : https://abhisheknodejs.herokuapp.com/
 
 ## Dependencies
 
--bcryptjs
--body-parser
--cors
--express
--express-session
--google-distance
--jsonwebtoken
--mysql
--uuid
+- bcryptjs
+- body-parser
+- cors
+- express
+- express-session
+- google-distance
+- jsonwebtoken
+- mysql
+- uuid
 
 ## ROUTES
 
@@ -149,22 +149,22 @@ Output :
 ## ALGORITHM
 
 ### Calculation of ETA for an order: 
--There is a route which is used for updating the current location of the delivery executive.
--When a user asks for ETA, the distance of the current location of the respective delivery executive alloted to that order and the address of the user is sent to the google-maps api, which returns the time required to reach the destination
+- There is a route which is used for updating the current location of the delivery executive.
+- When a user asks for ETA, the distance of the current location of the respective delivery executive alloted to that order and the address of the user is sent to the google-maps api, which returns the time required to reach the destination
 
 ### Creation of Delivery Executive User:
--When a new account is created with the role of del_executive, then a new record is created in the del_executive table with the same id
+- When a new account is created with the role of del_executive, then a new record is created in the del_executive table with the same id
 
 ### Assigning a Delivery Executive when order is placed:
--According to the problem statement given by you, orders within the same area should be given the same delivery executive.
--By logic, if two orders are in the same area, then the time taken to travel from one of them to the other would be less
--Hence, I when an order is placed, first I calculate the time taken between the destination address of a delivery executive and the current order address. 
--This is calculated for all the delivery executives
--If a delivery executive is free then the current location of them is considered
--Then this list is sorted in ascending order of time taken
--Although the choice should be to assign the order to the first executive in the list, but what if the executive has multiple orders already, and there are other free executives
--It may take more time for a free executive to go from shop to the address, but in the long term when all executives are utilised then there are higher chances of an order being nearer to one of them
--Hence, now the first delivery executive with the minimum number of pending orders is assigned the order
+- According to the problem statement given by you, orders within the same area should be given the same delivery executive.
+- By logic, if two orders are in the same area, then the time taken to travel from one of them to the other would be less
+- Hence, I when an order is placed, first I calculate the time taken between the destination address of a delivery executive and the current order address. 
+- This is calculated for all the delivery executives
+- If a delivery executive is free then the current location of them is considered
+- Then this list is sorted in ascending order of time taken
+- Although the choice should be to assign the order to the first executive in the list, but what if the executive has multiple orders already, and there are other free executives
+- It may take more time for a free executive to go from shop to the address, but in the long term when all executives are utilised then there are higher chances of an order being nearer to one of them
+- Hence, now the first delivery executive with the minimum number of pending orders is assigned the order
 
 This ensures that order is delivered in short time also all delivery executives are utilised
 There are definitely more hidden factors like time taken to complete pending orders, if an order is cancelled, or if an order can be delivered before another order, but that would need more complex logic which would have been tough to implement within 72 hrs, hence I went with a simple and optimal logic.
