@@ -108,7 +108,7 @@ router.post('/sign-up', [userMiddleware.validateRegister,userMiddleware.isLogged
           		{
           			addToDelExecutiveTable(data).then((data)=>{
           				return res.status(200).send({
-          					msg: "Successfully added to delivery executive table"
+          					msg: "Successfully created user, also added to delivery executive table"
         				});
           			})
           			.catch((err)=>{
@@ -466,19 +466,16 @@ router.post('/root/create_user',[userMiddleware.isLoggedIn, roleMiddleware.allow
             });
           } 
           else {
-          	var fresult = createNewUser(req.body.name,req.body.email,hash,req.body.address,"root");
-          	if(fresult.status == 'error')
-          	{
-          		return res.status(401).send({
-          			msg: fresult.msg
+          	createNewUser(req.body.name,req.body.email,hash,req.body.address,"root").then((data)=>{
+          		return res.status(200).send({
+          			msg: "Successfully created new user"
         		});
-          	}
-          	else if(fresult.status == 'success')
-          	{
-          		return res.status(201).send({
-                  msg: fresult.msg
-                });
-          	}
+          	})
+          	.catch((err)=>{
+          		return res.status(401).send({
+          					msg: err
+        		});
+          	});
           }
         });
       }
