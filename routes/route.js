@@ -13,49 +13,73 @@ const distance = require('../lib/distance.js');
 const userMiddleware = require('../middleware/users.js');
 const roleMiddleware = require('../middleware/roles.js');
 
+var di = require('google-distance');
+di.apiKey = 'AIzaSyAqG418biOaqOjCkvjAvA8B64biCVYj7H4';
+
 var ssn;
 
 function createNewUser(name,email,hash,address,role)
 {
-	var unique_id = uuid.v4();
-	let reply;
-	//check if valid role
-          	if(role != 'root' && role != 'del_executive' && role != 'user' )
-          	{
-          		return {'status':'error','msg':'Invalid role'};
-          	}
-            // has hashed pw => add to database
-            db.query(
+	return new Promise(function(resolve,reject){
+		var unique_id = uuid.v4();
+		let reply;
+		//check if valid role
+        if(role != 'root' && role != 'del_executive' && role != 'user' )
+        {
+          	return {'status':'error','msg':'Invalid role'};
+        }
+        // has hashed pw => add to database
+        db.query(
             	`INSERT INTO users (id, name, email, password, address, role, timestamp) VALUES (${db.escape(unique_id)}, ${db.escape(name)},${db.escape(email)}, ${db.escape(hash)},${db.escape(address)},${db.escape(role)},CURRENT_TIMESTAMP())`,
-              (err, result) => {
-              	console.log("inside function");
-                if (err) {
-                	//throw err;
-                  reply = {'status':'error','msg':err};
-                }
-              }
+           	(err, result) => {
+            	console.log("inside function");
+            	if (err) {
+                	return reject(err);
+            	}
+            	console.log("create user : "+result);
+            	resolve({
+            		"uid":unique_id,
+            		"name":name,
+            		"role":role});
+           	}
 
-   			);
+   		);
+    });
+ }
    			//If delivery executive role then add the user to del_executive table
-   			if(role == 'del_executive')
-   			{
-   				db.query(
-            	`INSERT INTO del_executive (id, name, cur_order_id, address, location, next_orders) VALUES (${db.escape(unique_id)}, ${db.escape(name)},"", "","","")`,
+   			// if(role == 'del_executive')
+   			// {
+   			// 	db.query(
+      //       	`INSERT INTO del_executive (id, name, cur_order_id, address, location, next_orders) VALUES (${db.escape(unique_id)}, ${db.escape(name)},"", "","","")`,
+      //         		(err, result) => {
+      //           		if (err) {
+      //           			console.log(err);
+      //             			reply = {'status':'error','msg':err};
+      //             			console.log(reply.msg);
+      //           		}
+      //         		}
+   			// 	);
+
+   			// }
+   			// if(reply == undefined)
+   			// {
+   			// 	return {'status':'success','msg':'Successfully created new user'};
+   			// }
+      //      return reply;
+
+function addToDelExecutiveTable(data)
+{
+	return new Promise(function(resolve,reject){
+		db.query(
+            	`INSERT INTO del_executive (id, name, cur_order_id, final_address, location, next_orders) VALUES (${db.escape(data.uid)}, ${db.escape(data.name)},"", "","","")`,
               		(err, result) => {
                 		if (err) {
-                			console.log(err);
-                  			reply = {'status':'error','msg':err};
-                  			console.log(reply.msg);
+                			return reject(err);
                 		}
+                		resolve(result);
               		}
    				);
-
-   			}
-   			if(reply == undefined)
-   			{
-   				return {'status':'success','msg':'Successfully created new user'};
-   			}
-           return reply;
+	});
 }
 
 //Authentication Routes
@@ -78,19 +102,33 @@ router.post('/sign-up', [userMiddleware.validateRegister,userMiddleware.isLogged
             });
           } 
           else {
-          	var fresult = createNewUser(req.body.name,req.body.email,hash,req.body.address,req.body.role);
-          	if(fresult.status == 'error')
-          	{
+          	createNewUser(req.body.name,req.body.email,hash,req.body.address,req.body.role).then((data)=>{
+          		console.log("inside then of cnu : "+data.uid+data.role);
+          		if(data.role=='del_executive')
+          		{
+          			addToDelExecutiveTable(data).then((data)=>{
+          				return res.status(200).send({
+          					msg: "Successfully added to delivery executive table"
+        				});
+          			})
+          			.catch((err)=>{
+          				return res.status(401).send({
+          					msg: err
+        				});
+          			});
+          		}
+          		else
+          		{
+          			return res.status(200).send({
+          				msg: "Successfully created new user"
+        			});
+          		}
+          	})
+          	.catch((err)=>{
           		return res.status(401).send({
-          			msg: fresult.msg
+          					msg: err
         		});
-          	}
-          	else if(fresult.status == 'success')
-          	{
-          		return res.status(201).send({
-                  msg: fresult.msg
-                });
-          	}
+          	});
           }
         });
       }
@@ -182,44 +220,24 @@ router.get('/logout',userMiddleware.isLoggedIn, (req, res, next) => {
 });
 
 //User Routes
-// router.get('/get/cookies',[userMiddleware.isLoggedIn, roleMiddleware.allowedRoles(['root','user'])],(req, res, next) =>{
-// 	ssn = req.session;
-// 	db.query(`SELECT * FROM cookies;`,
-// 		(err, result) => {
-// 			if (err) {
-//         		throw err;
-//         		return res.status(401).send({
-//           			msg: err
-//         		});
-//       		}
-//       		if(result){
-//       			return res.status(200).send({
-//             		msg: 'All cookies',
-//             		data: result
-//           		});
-//       		}
-      		
-//     });
-
-// });
-
 router.get('/get/cookies',[userMiddleware.isLoggedIn, roleMiddleware.allowedRoles(['root','user'])],(req, res, next) =>{
 	ssn = req.session;
-	var reply;
-	db.query(`SELECT * FROM cookiees;`,
+	db.query(`SELECT * FROM cookies;`,
 		(err, result) => {
 			if (err) {
-        		//throw err;
-        		reply = {'status':'error','msg':err};
+        		throw err;
+        		return res.status(401).send({
+          			msg: err
+        		});
       		}
       		if(result){
-      			reply = {'status':'success','msg':'hogaya','data':result};
+      			return res.status(200).send({
+            		msg: 'All cookies',
+            		data: result
+          		});
       		}
       		
     });
-    console.log(reply.status);
-    return res.status(200).send(reply);
-
 
 });
 
@@ -470,10 +488,21 @@ router.post('/root/create_user',[userMiddleware.isLoggedIn, roleMiddleware.allow
 
 
 
-router.get('/secret-route', [userMiddleware.isLoggedIn,roleMiddleware.allowedRoles(['root'])], (req, res, next) => {
+router.get('/secret-route', (req, res, next) => {
 	ssn = req.session;
-  console.log(req.userData);
-  console.log(ssn.name+" "+ssn.email+" "+ssn.role);
+  	di.get(
+  	{
+    	origin: 'Nageswar Residency, Odisha, India',
+    	destination: 'San Diego, CA'
+  	},
+  	function(err, data) {
+    	if (err) 
+    	throw err;
+
+    	console.log(data);
+    	return data;
+	});
+	
   res.send('This is the secret content. Only logged in users can see that!'+ssn.role+" session "+ssn.isLoggedIn);
 });
 
