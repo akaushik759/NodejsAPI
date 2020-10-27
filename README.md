@@ -48,10 +48,10 @@ Input :
 Output : 
 	Success - {'status':200, 'msg':''}
 	Error - {'status':401, 'msg':''}
-
+```
 ### User Routes
 
-
+```
 4. /api/get/cookies
 
 GET - Used to fetch the list of all cookies in db with their price
@@ -148,14 +148,14 @@ Output :
 
 ## ALGORITHM
 
-###Calculation of ETA for an order: 
+### Calculation of ETA for an order: 
 -There is a route which is used for updating the current location of the delivery executive.
 -When a user asks for ETA, the distance of the current location of the respective delivery executive alloted to that order and the address of the user is sent to the google-maps api, which returns the time required to reach the destination
 
-###Creation of Delivery Executive User:
+### Creation of Delivery Executive User:
 -When a new account is created with the role of del_executive, then a new record is created in the del_executive table with the same id
 
-###Assigning a Delivery Executive when order is placed:
+### Assigning a Delivery Executive when order is placed:
 -According to the problem statement given by you, orders within the same area should be given the same delivery executive.
 -By logic, if two orders are in the same area, then the time taken to travel from one of them to the other would be less
 -Hence, I when an order is placed, first I calculate the time taken between the destination address of a delivery executive and the current order address. 
@@ -169,4 +169,4 @@ Output :
 This ensures that order is delivered in short time also all delivery executives are utilised
 There are definitely more hidden factors like time taken to complete pending orders, if an order is cancelled, or if an order can be delivered before another order, but that would need more complex logic which would have been tough to implement within 72 hrs, hence I went with a simple and optimal logic.
 
-###Roles - user, root, del_executive
+## Roles - user, root, del_executive
