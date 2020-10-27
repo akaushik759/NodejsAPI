@@ -235,10 +235,10 @@ router.post('/order/cookies',[userMiddleware.isLoggedIn, roleMiddleware.allowedR
 
       		if(result)
       		{	
-      			delivery.assignDeliveryExecutive(result[0].id,order_addr).then((result)=>{
+      			delivery.assignDeliveryExecutive(result.id,order_addr).then((result)=>{
       				return res.status(200).send({
             			msg: 'Successfully placed order',
-            			data: result[0]
+            			data: result
           			});
       			})
       			.catch((err)=>{
