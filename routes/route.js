@@ -488,26 +488,4 @@ router.post('/root/create_user',[userMiddleware.isLoggedIn, roleMiddleware.allow
   );
 });
 
-
-
-router.get('/secret-route', (req, res, next) => {
-	ssn = req.session;
-	for(var i=0; i<100;i++){
-  	di.get(
-  	{
-    	origin: 'Nageswar Residency, Odisha, India',
-    	destination: 'San Diego, CA'
-  	},
-  	function(err, data) {
-    	if (err) 
-    	console.log(err);
-
-    	console.log(data);
-    	return data;
-	});
-  }
-	
-  res.send('This is the secret content. Only logged in users can see that!'+ssn.role+" session "+ssn.isLoggedIn);
-});
-
 module.exports = router;
