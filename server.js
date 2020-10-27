@@ -25,7 +25,7 @@ app.use(session({
 app.use(cors());
 
 // add routes
-const route = require('./routes/route.js');
+const route = require('./routes/router.js');
 app.use('/api', route);
 
 // run server

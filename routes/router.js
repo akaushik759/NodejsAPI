@@ -1,4 +1,3 @@
-// routes/router.js
 
 const express = require('express');
 var session = require('express-session');
@@ -46,27 +45,6 @@ function createNewUser(name,email,hash,address,role)
    		);
     });
  }
-   			//If delivery executive role then add the user to del_executive table
-   			// if(role == 'del_executive')
-   			// {
-   			// 	db.query(
-      //       	`INSERT INTO del_executive (id, name, cur_order_id, address, location, next_orders) VALUES (${db.escape(unique_id)}, ${db.escape(name)},"", "","","")`,
-      //         		(err, result) => {
-      //           		if (err) {
-      //           			console.log(err);
-      //             			reply = {'status':'error','msg':err};
-      //             			console.log(reply.msg);
-      //           		}
-      //         		}
-   			// 	);
-
-   			// }
-   			// if(reply == undefined)
-   			// {
-   			// 	return {'status':'success','msg':'Successfully created new user'};
-   			// }
-      //      return reply;
-
 function addToDelExecutiveTable(data)
 {
 	return new Promise(function(resolve,reject){
@@ -83,7 +61,7 @@ function addToDelExecutiveTable(data)
 }
 
 //Authentication Routes
-router.post('/sign-up', [userMiddleware.validateRegister,userMiddleware.isLoggedOut], (req, res, next) => {
+router.post('/auth/signup', [userMiddleware.validateRegister,userMiddleware.isLoggedOut], (req, res, next) => {
   db.query(
     `SELECT * FROM users WHERE LOWER(email) = LOWER(${db.escape(req.body.email)});`,
     (err, result) => {
@@ -136,7 +114,7 @@ router.post('/sign-up', [userMiddleware.validateRegister,userMiddleware.isLogged
   );
 });
 
-router.post('/login', userMiddleware.isLoggedOut,(req, res, next) => {
+router.post('/auth/login', userMiddleware.isLoggedOut,(req, res, next) => {
 	ssn = req.session;
   db.query(
     `SELECT * FROM users WHERE email = ${db.escape(req.body.email)};`,
@@ -202,7 +180,7 @@ router.post('/login', userMiddleware.isLoggedOut,(req, res, next) => {
   );
 });
 
-router.get('/logout',userMiddleware.isLoggedIn, (req, res, next) => {
+router.get('/auth/logout',userMiddleware.isLoggedIn, (req, res, next) => {
 	ssn = req.session;
 	ssn.destroy(function(error){ 
         console.log("Session Destroyed")
