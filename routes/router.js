@@ -39,6 +39,7 @@ function createNewUser(name,email,hash,address,role)
             	resolve({
             		"uid":unique_id,
             		"name":name,
+            		"address":address,
             		"role":role});
            	}
 
@@ -49,7 +50,7 @@ function addToDelExecutiveTable(data)
 {
 	return new Promise(function(resolve,reject){
 		db.query(
-            	`INSERT INTO del_executive (id, name, cur_order_id, final_address, location, next_orders) VALUES (${db.escape(data.uid)}, ${db.escape(data.name)},"", "","","")`,
+            	`INSERT INTO del_executive (id, name, cur_order_id, final_address, location, next_orders) VALUES (${db.escape(data.uid)}, ${db.escape(data.name)},"", "",${db.escape(data.address)},"")`,
               		(err, result) => {
                 		if (err) {
                 			return reject(err);
@@ -59,6 +60,7 @@ function addToDelExecutiveTable(data)
    				);
 	});
 }
+
 
 //Authentication Routes
 router.post('/auth/signup', [userMiddleware.validateRegister,userMiddleware.isLoggedOut], (req, res, next) => {
@@ -221,10 +223,11 @@ router.get('/get/cookies',[userMiddleware.isLoggedIn, roleMiddleware.allowedRole
 
 router.post('/order/cookies',[userMiddleware.isLoggedIn, roleMiddleware.allowedRoles(['root','user'])],(req, res, next) =>{
 	ssn = req.session;
+	var unique_id = uuid.v4();
 	var cookie_id = req.body.id;
 	var customer_id = ssn.user_id;
 	var order_addr = ssn.address;
-	db.query(`INSERT INTO orders (id, cookie_id, cust_id, address, status, dexecutive, timestamp) VALUES ('${uuid.v4()}', ${db.escape(cookie_id)},${db.escape(customer_id)}, ${db.escape(order_addr)},${db.escape("undelivered")},"",CURRENT_TIMESTAMP());`,
+	db.query(`INSERT INTO orders (id, cookie_id, cust_id, address, status, dexecutive, timestamp) VALUES (${db.escape(unique_id)}, ${db.escape(cookie_id)},${db.escape(customer_id)}, ${db.escape(order_addr)},${db.escape("undelivered")},"",CURRENT_TIMESTAMP());`,
 		(err, result) => {
 			if (err) {
         		//throw err;
@@ -235,16 +238,16 @@ router.post('/order/cookies',[userMiddleware.isLoggedIn, roleMiddleware.allowedR
 
       		if(result)
       		{	
-      			delivery.assignDeliveryExecutive(result.id,order_addr).then((result)=>{
+      			console.log(result.insertId);
+      			delivery.assignDeliveryExecutive(unique_id,order_addr).then((result)=>{
+      				console.log("assignDeliveryExecutive result : "+result);
       				return res.status(200).send({
             			msg: 'Successfully placed order',
             			data: result
           			});
       			})
       			.catch((err)=>{
-      				return res.status(401).send({
-          				msg: err
-        			});
+      				return res.status(401).send(err);
       			});
       		}	
     });
@@ -280,7 +283,8 @@ router.get('/get/eta/:oid',[userMiddleware.isLoggedIn, roleMiddleware.allowedRol
         		});
       		}
       		if(result){
-      			db.query(`SELECT location FROM del_executive WHERE id = ${db.escape(result[0])};`,
+      			
+      			db.query(`SELECT location FROM del_executive WHERE id = ${db.escape(result[0].dexecutive)};`,
 					(err, result) => {
 					if (err) {
         				//throw err;
@@ -289,7 +293,7 @@ router.get('/get/eta/:oid',[userMiddleware.isLoggedIn, roleMiddleware.allowedRol
         				});
       				}
       				if(result){
-      					delivery.getTimeTakenInLetters(ssn.address, result[0]).then((val)=>{
+      					delivery.getTimeTakenInLetters(ssn.address, result[0].location).then((val)=>{
       						return res.status(200).send({
             					msg: 'Successfully calculated ETA',
             					data: val
@@ -338,27 +342,7 @@ router.put('/order/status/:oid',[userMiddleware.isLoggedIn, roleMiddleware.allow
         		});
       		}
       		if(result){
-      			return res.status(200).send({
-            		msg: 'Successfully updated order status',
-            		data: result[0]
-          		});
-      		}		
-    });
-
-    db.query(`SELECT next_orders FROM del_executive WHERE id = ${db.escape(req.params['oid'])};`,
-		(err, result) => {
-			if (err) {
-        		//throw err;
-        		return res.status(401).send({
-          			msg: err
-        		});
-      		}
-      		if(result){
-      			next_order_list = JSON.parse(result[0]);
-      			var cur_order_id = next_order_list[0];
-      			var cur_order_address = next_order_list[1];
-      			next_order_list.shift();
-      			db.query(`UPDATE del_executive SET cur_order_id = ${db.escape(cur_order_id)}, next_orders = ${db.escape(JSON.stringify(next_order_list))}  WHERE id = ${db.escape(req.params['oid'])};`,
+      			db.query(`SELECT next_orders FROM del_executive WHERE cur_order_id = ${db.escape(req.params['oid'])};`,
 					(err, result) => {
 						if (err) {
         					//throw err;
@@ -367,14 +351,33 @@ router.put('/order/status/:oid',[userMiddleware.isLoggedIn, roleMiddleware.allow
         					});
       					}
       					if(result){
-      						return res.status(200).send({
-            					msg: 'Successfully updated order status',
-            					data: result[0]
-          					});
+      						console.log(typeof(result[0].next_orders)+" and "+typeof(JSON.parse(JSON.parse(result[0].next_orders))));
+      						next_order_list = JSON.parse(result[0].next_orders);
+      						var cur_order_id = next_order_list[0];
+      						var cur_order_address = next_order_list[1];
+      						console.log(typeof(next_order_list));
+      						next_order_list.shift();
+      						db.query(`UPDATE del_executive SET cur_order_id = ${db.escape(cur_order_id)}, next_orders = ${db.escape(JSON.stringify(next_order_list))}  WHERE id = ${db.escape(req.params['oid'])};`,
+								(err, result) => {
+									if (err) {
+        								//throw err;
+        								return res.status(401).send({
+          									msg: err
+        								});
+      								}
+      								if(result){
+      									return res.status(200).send({
+            								msg: 'Successfully updated order status',
+            								data: result
+          								});
+      								}		
+    						});
       					}		
     				});
       		}		
     });
+
+    
 
 });
 
