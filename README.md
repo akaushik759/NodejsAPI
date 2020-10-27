@@ -4,7 +4,7 @@
 
 Link : https://abhisheknodejs.herokuapp.com/
 
-## Dependencies
+## DEPENDENCIES
 
 - bcryptjs
 - body-parser
@@ -15,6 +15,13 @@ Link : https://abhisheknodejs.herokuapp.com/
 - jsonwebtoken
 - mysql
 - uuid
+
+## TABLES
+
+- users (Store all users)
+- orders (Store all orders)
+- del_executive (Store all delivery executives and their assigned order details)
+- cookies (Store all cookie inventory)
 
 ## ROUTES
 
