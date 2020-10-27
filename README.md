@@ -174,6 +174,6 @@ Output :
 - Hence, now the first delivery executive with the minimum number of pending orders is assigned the order
 
 This ensures that order is delivered in short time also all delivery executives are utilised
-There are definitely more hidden factors like time taken to complete pending orders, if an order is cancelled, or if an order can be delivered before another order, but that would need more complex logic which would have been tough to implement within 72 hrs, hence I went with a simple and optimal logic.
+There are definitely more hidden factors like time taken to complete pending orders, if an order is cancelled, or if an order can be delivered before another order, but that would need more complex logic which would have required more time, hence I went with a simple and optimal logic.
 
 ## Roles - user, root, del_executive
