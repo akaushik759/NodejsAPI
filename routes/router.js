@@ -17,6 +17,7 @@ di.apiKey = 'AIzaSyAqG418biOaqOjCkvjAvA8B64biCVYj7H4';
 
 var ssn;
 
+//HELPER FUNCTIONS
 function createNewUser(name,email,hash,address,role)
 {
 	return new Promise(function(resolve,reject){
@@ -61,10 +62,12 @@ function addToDelExecutiveTable(data)
 	});
 }
 
+//ROUTES
 
 //Authentication Routes
 router.post('/auth/signup', [userMiddleware.validateRegister,userMiddleware.isLoggedOut], (req, res, next) => {
-  db.query(
+	//check if email id already in use
+  	db.query(
     `SELECT * FROM users WHERE LOWER(email) = LOWER(${db.escape(req.body.email)});`,
     (err, result) => {
 
@@ -74,7 +77,7 @@ router.post('/auth/signup', [userMiddleware.validateRegister,userMiddleware.isLo
         });
       } 
       else {
-        // username is available
+        //generate hash for password
         bcrypt.hash(req.body.password, 10, (err, hash) => {
           if (err) {
             return res.status(500).send({
@@ -84,6 +87,7 @@ router.post('/auth/signup', [userMiddleware.validateRegister,userMiddleware.isLo
           else {
           	createNewUser(req.body.name,req.body.email,hash,req.body.address,req.body.role).then((data)=>{
           		console.log("inside then of cnu : "+data.uid+data.role);
+          		//if Delivery executive then add to del_executive table
           		if(data.role=='del_executive')
           		{
           			addToDelExecutiveTable(data).then((data)=>{
@@ -202,6 +206,7 @@ router.get('/auth/logout',userMiddleware.isLoggedIn, (req, res, next) => {
 //User Routes
 router.get('/get/cookies',[userMiddleware.isLoggedIn, roleMiddleware.allowedRoles(['root','user'])],(req, res, next) =>{
 	ssn = req.session;
+	//Fetch all cookies from the database
 	db.query(`SELECT * FROM cookies;`,
 		(err, result) => {
 			if (err) {
@@ -227,6 +232,7 @@ router.post('/order/cookies',[userMiddleware.isLoggedIn, roleMiddleware.allowedR
 	var cookie_id = req.body.id;
 	var customer_id = ssn.user_id;
 	var order_addr = ssn.address;
+	//insert order into orders table
 	db.query(`INSERT INTO orders (id, cookie_id, cust_id, address, status, dexecutive, timestamp) VALUES (${db.escape(unique_id)}, ${db.escape(cookie_id)},${db.escape(customer_id)}, ${db.escape(order_addr)},${db.escape("undelivered")},"",CURRENT_TIMESTAMP());`,
 		(err, result) => {
 			if (err) {
@@ -239,11 +245,10 @@ router.post('/order/cookies',[userMiddleware.isLoggedIn, roleMiddleware.allowedR
       		if(result)
       		{	
       			console.log(result.insertId);
+      			//assign a delivery executive for delivery
       			delivery.assignDeliveryExecutive(unique_id,order_addr).then((result)=>{
-      				console.log("assignDeliveryExecutive result : "+result);
       				return res.status(200).send({
-            			msg: 'Successfully placed order',
-            			data: result
+            			msg: 'Successfully placed order'
           			});
       			})
       			.catch((err)=>{
@@ -274,6 +279,7 @@ router.get('/get/orders/customer/:cid',[userMiddleware.isLoggedIn, roleMiddlewar
 
 router.get('/get/eta/:oid',[userMiddleware.isLoggedIn, roleMiddleware.allowedRoles(['root','user'])],(req, res, next) =>{
 	ssn = req.session;
+	//get the delivery executive assigned for this order from orders table
 	db.query(`SELECT dexecutive FROM orders WHERE id = ${db.escape(req.params['oid'])};`,
 		(err, result) => {
 			if (err) {
@@ -283,7 +289,7 @@ router.get('/get/eta/:oid',[userMiddleware.isLoggedIn, roleMiddleware.allowedRol
         		});
       		}
       		if(result){
-      			
+      			//get the current location of the delivery executive
       			db.query(`SELECT location FROM del_executive WHERE id = ${db.escape(result[0].dexecutive)};`,
 					(err, result) => {
 					if (err) {
@@ -293,6 +299,7 @@ router.get('/get/eta/:oid',[userMiddleware.isLoggedIn, roleMiddleware.allowedRol
         				});
       				}
       				if(result){
+      					//calculate the time taken for delivery executive to reach from their location to address
       					delivery.getTimeTakenInLetters(ssn.address, result[0].location).then((val)=>{
       						return res.status(200).send({
             					msg: 'Successfully calculated ETA',
@@ -333,6 +340,7 @@ router.get('/get/orders/dexecutive/:did',[userMiddleware.isLoggedIn, roleMiddlew
 router.put('/order/status/:oid',[userMiddleware.isLoggedIn, roleMiddleware.allowedRoles(['root','del_executive'])],(req, res, next) =>{
 	ssn = req.session;
 	var next_order_list;
+	//update order that cookie has been delivered
 	db.query(`UPDATE orders SET status = 'delivered'  WHERE id = ${db.escape(req.params['oid'])};`,
 		(err, result) => {
 			if (err) {
@@ -342,6 +350,7 @@ router.put('/order/status/:oid',[userMiddleware.isLoggedIn, roleMiddleware.allow
         		});
       		}
       		if(result){
+      			//get the next_orders list for that delivery executive so that this completed order can be removed from it
       			db.query(`SELECT next_orders FROM del_executive WHERE cur_order_id = ${db.escape(req.params['oid'])};`,
 					(err, result) => {
 						if (err) {
@@ -351,13 +360,12 @@ router.put('/order/status/:oid',[userMiddleware.isLoggedIn, roleMiddleware.allow
         					});
       					}
       					if(result){
-      						console.log(typeof(result[0].next_orders)+" and "+typeof(JSON.parse(JSON.parse(result[0].next_orders))));
-      						next_order_list = JSON.parse(result[0].next_orders);
-      						var cur_order_id = next_order_list[0];
-      						var cur_order_address = next_order_list[1];
-      						console.log(typeof(next_order_list));
+      						
+      						next_order_list = JSON.parse(result[0].next_orders)
+      						var copy = next_order_list.slice();
       						next_order_list.shift();
-      						db.query(`UPDATE del_executive SET cur_order_id = ${db.escape(cur_order_id)}, next_orders = ${db.escape(JSON.stringify(next_order_list))}  WHERE id = ${db.escape(req.params['oid'])};`,
+      						//Update next_orders list and current order for the delivery executive
+      						db.query(`UPDATE del_executive SET cur_order_id = ${db.escape(copy[0][0])}, next_orders = ${db.escape(JSON.stringify(next_order_list))}  WHERE id = ${db.escape(req.params['oid'])};`,
 								(err, result) => {
 									if (err) {
         								//throw err;

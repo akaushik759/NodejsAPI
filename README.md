@@ -155,6 +155,10 @@ Output :
 
 ## ALGORITHM
 
+### Login:
+- Session variables are used for checking login
+- For more security JWT tokens are assigned, which are to be used in the header of each subsequent call, else the api call will be denied
+
 ### Calculation of ETA for an order: 
 - There is a route which is used for updating the current location of the delivery executive.
 - When a user asks for ETA, the distance of the current location of the respective delivery executive alloted to that order and the address of the user is sent to the google-maps api, which returns the time required to reach the destination
@@ -177,3 +181,5 @@ This ensures that order is delivered in short time also all delivery executives 
 There are definitely more hidden factors like time taken to complete pending orders, if an order is cancelled, or if an order can be delivered before another order, but that would need more complex logic which would have required more time, hence I went with a simple and optimal logic.
 
 ## Roles - user, root, del_executive
+
+### Please note, only google-location api allowed locations are supported
