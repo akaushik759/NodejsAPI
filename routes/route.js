@@ -9,7 +9,7 @@ const jwt = require('jsonwebtoken');
 const uuid = require('uuid');
 
 const db = require('../lib/db.js');
-const distance = require('../lib/distance.js');
+const delivery = require('../lib/delivery.js');
 const userMiddleware = require('../middleware/users.js');
 const roleMiddleware = require('../middleware/roles.js');
 
@@ -257,14 +257,18 @@ router.post('/order/cookies',[userMiddleware.isLoggedIn, roleMiddleware.allowedR
 
       		if(result)
       		{	
-      			distance.assignDeliveryExecutive(result[0].id,order_addr);
-      			return res.status(200).send({
-            		msg: 'Successfully placed order',
-            		data: result[0]
-          		});
-      		}
-
-      		
+      			delivery.assignDeliveryExecutive(result[0].id,order_addr).then((result)=>{
+      				return res.status(200).send({
+            			msg: 'Successfully placed order',
+            			data: result[0]
+          			});
+      			})
+      			.catch((err)=>{
+      				return res.status(401).send({
+          				msg: err
+        			});
+      			});
+      		}	
     });
 });
 
@@ -307,18 +311,19 @@ router.get('/get/eta/:oid',[userMiddleware.isLoggedIn, roleMiddleware.allowedRol
         				});
       				}
       				if(result){
-      					var ETA = distance.getTimeTaken(ssn.address, result[0]).duration;
-      			
-      					return res.status(200).send({
-            			msg: 'Successfully calculated ETA',
-            			data: ETA
+      					delivery.getTimeTakenInLetters(ssn.address, result[0]).then((val)=>{
+      						return res.status(200).send({
+            					msg: 'Successfully calculated ETA',
+            					data: val
+          					});
+      					})
+      					.catch((err)=>{
+          					return res.status(401).send({
+          						msg: err
+        					});
           				});
       				}		
     			});
-      			return res.status(200).send({
-            		msg: 'Successfully calculated ETA',
-            		data: ETA
-          		});
       		}		
     });
 });
@@ -487,6 +492,7 @@ router.post('/root/create_user',[userMiddleware.isLoggedIn, roleMiddleware.allow
 
 router.get('/secret-route', (req, res, next) => {
 	ssn = req.session;
+	for(var i=0; i<100;i++){
   	di.get(
   	{
     	origin: 'Nageswar Residency, Odisha, India',
@@ -494,11 +500,12 @@ router.get('/secret-route', (req, res, next) => {
   	},
   	function(err, data) {
     	if (err) 
-    	throw err;
+    	console.log(err);
 
     	console.log(data);
     	return data;
 	});
+  }
 	
   res.send('This is the secret content. Only logged in users can see that!'+ssn.role+" session "+ssn.isLoggedIn);
 });
